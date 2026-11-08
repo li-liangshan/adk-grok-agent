@@ -100,7 +100,7 @@ func (m *openaiModel) generate(ctx context.Context, req *model.LLMRequest) (*mod
 	resp, err := m.client.Chat.Completions.New(ctx, *params)
 	if err != nil {
 		slog.Error("failed to call llm API", "error", err.Error())
-		return nil, fmt.Errorf("failed to call Grok API: %w", err)
+		return nil, fmt.Errorf("failed to call LLM API: %w", err)
 	}
 
 	if resp == nil || len(resp.Choices) == 0 {

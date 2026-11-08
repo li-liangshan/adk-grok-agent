@@ -11,7 +11,8 @@
 这是一个使用 Go 语言开发的 AI 代理应用，集成了以下功能：
 
 - **天气查询**：通过 OpenWeatherMap API 获取指定城市的实时天气信息
-- **自然语言交互**：使用 Grok (x.ai) 大语言模型进行智能对话
+- **天气预报**：查询指定城市未来 1-5 天的每日天气预报
+- **自然语言交互**：使用 DeepSeek (deepseek-flash) 大语言模型进行智能对话
 - **错误处理**：友好的错误提示和异常处理机制
 
 ## 主要功能
@@ -23,9 +24,16 @@
 - 支持错误处理和友好的错误提示
 - 当查询失败时，会提示用户并提供替代建议
 
+### 天气预报查询 (`get_weather_forecast`)
+
+- 根据用户提供的城市名称查询未来多日天气预报
+- 返回每天的日期、天气描述和最低/最高温度（摄氏度）
+- `days` 参数可选，支持 1-5 天，默认 3 天
+- 按天聚合 3 小时粒度的预报数据，取接近正午的天气描述
+
 ### 智能对话
 
-- 使用 Grok-4-1-fast 模型进行自然语言理解
+- 使用 deepseek-flash 模型进行自然语言理解
 - 自动识别用户意图并调用相应的工具
 - 提供流畅的对话体验
 - 智能处理天气查询请求和用户反馈
@@ -34,7 +42,7 @@
 
 - Go 1.25.0 或更高版本
 - 有效的 API 密钥：
-  - `XAI_API_KEY`: x.ai (Grok) API 密钥
+  - `DEEPSEEK_API_KEY`: DeepSeek API 密钥
   - `OWM_API_KEY`: OpenWeatherMap API 密钥
 
 ## 安装步骤
@@ -57,7 +65,7 @@ go mod download
 创建 `.env` 文件或设置环境变量：
 
 ```bash
-export XAI_API_KEY="your-xai-api-key"
+export DEEPSEEK_API_KEY="your-deepseek-api-key"
 export OWM_API_KEY="your-openweathermap-api-key"
 ```
 
@@ -65,14 +73,14 @@ export OWM_API_KEY="your-openweathermap-api-key"
 
 ```bash
 # .env
-XAI_API_KEY=your-xai-api-key
+DEEPSEEK_API_KEY=your-deepseek-api-key
 OWM_API_KEY=your-openweathermap-api-key
 ```
 
 ### 4. 获取 API 密钥
 
-#### XAI API 密钥 (Grok)
-1. 访问 [x.ai](https://x.ai)
+#### DeepSeek API 密钥
+1. 访问 [DeepSeek](https://platform.deepseek.com)
 2. 注册账号并获取 API 密钥
 
 #### OpenWeatherMap API 密钥
@@ -85,7 +93,11 @@ OWM_API_KEY=your-openweathermap-api-key
 ### 基本运行
 
 ```bash
-go run main.go
+# 启动 Web 服务（Web UI: http://localhost:8080/ui/）
+go run main.go web api webui
+
+# 或在终端中与控制台交互
+go run main.go console
 ```
 
 ### 使用 ADK Launcher
@@ -108,6 +120,7 @@ adk-grok-agent/
 ├── agents/                 # 代理实现
 │   └── weather_report.go  # 天气报告代理核心逻辑
 ├── models/                 # LLM 模型适配器
+│   ├── deepseek.go        # DeepSeek 模型适配器
 │   ├── grok.go            # Grok (x.ai) 模型适配器
 │   ├── openai.go          # OpenAI 模型适配器
 │   ├── openrouter.go      # OpenRouter 模型适配器
@@ -130,6 +143,10 @@ adk-grok-agent/
 代理: [调用 get_weather_report 工具]
 代理: "The weather in Shanghai is cloudy with a temperature of 18.2 degrees Celsius."
 
+用户: "What's the weather forecast for Beijing for the next 3 days?"
+代理: [调用 get_weather_forecast 工具，days=3]
+代理: "Forecast for Beijing: 2026-11-08: clear sky, 9.4~17.8 degrees Celsius; ..."
+
 用户: "The weather in Beijing is not available"
 代理: [get_weather_report 返回错误状态]
 代理: "I'm sorry, but the weather information for Beijing is not available. Would you like to try another city?"
@@ -142,7 +159,7 @@ adk-grok-agent/
 1. **API 密钥错误**
    - 确保环境变量已正确设置
    - 检查 API 密钥是否有效
-   - 验证环境变量名称是否正确（`XAI_API_KEY` 和 `OWM_API_KEY`）
+   - 验证环境变量名称是否正确（`DEEPSEEK_API_KEY` 和 `OWM_API_KEY`）
 
 2. **天气查询失败**
    - 验证 OpenWeatherMap API 密钥是否有效
@@ -151,7 +168,7 @@ adk-grok-agent/
    - 检查 API 配额是否已用完
 
 3. **LLM 调用失败**
-   - 检查 XAI API 密钥是否正确
+   - 检查 DeepSeek API 密钥是否正确
    - 确认账户有足够的配额
    - 查看日志中的详细错误信息
    - 验证网络连接和防火墙设置
@@ -173,4 +190,4 @@ adk-grok-agent/
 
 - [Google ADK 文档](https://github.com/google/adk)
 - [OpenWeatherMap API](https://openweathermap.org/api)
-- [x.ai (Grok)](https://x.ai)
+- [DeepSeek](https://platform.deepseek.com)
